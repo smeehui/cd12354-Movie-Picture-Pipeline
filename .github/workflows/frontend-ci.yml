@@ -36,6 +36,7 @@ jobs:
         run: cd starter/frontend && npm run test
 
   fe-ci:
+    needs: lint-and-test-frontend
     runs-on: ubuntu-latest
     environment: movie_dev_ops
     steps:
@@ -64,7 +65,7 @@ jobs:
           IMAGE_TAG: latest
         run: |
           cd starter/frontend
-          docker build -f . -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG" 
