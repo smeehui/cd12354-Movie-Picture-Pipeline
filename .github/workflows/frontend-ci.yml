@@ -25,6 +25,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.14.2
+
+      - name: Install deps
+        run: cd starter/frontend && npm i --force
+
       - name: Lint
         run: cd starter/frontend && npm run lint
 
