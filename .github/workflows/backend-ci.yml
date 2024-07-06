@@ -38,9 +38,6 @@ jobs:
           cd starter/backend
           pipenv install
 
-      - name: Install deps
-        run: cd starter/backend && pipenv install
-
       - name: Front-end lint
         run: cd starter/backend && pipenv run lint
 
