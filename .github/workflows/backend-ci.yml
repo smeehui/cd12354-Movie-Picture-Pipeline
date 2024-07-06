@@ -15,7 +15,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  lint-and-test-frontend:
+  lint-and-test-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +35,8 @@ jobs:
       - name: Install dependencies
         if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
-          pipenv install --deploy --dev
+          cd starter/backend
+          pipenv install
 
       - name: Install deps
         run: cd starter/backend && pipenv install
