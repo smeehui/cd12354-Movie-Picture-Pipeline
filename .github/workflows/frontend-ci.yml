@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: CI-FRONTEND
 
 # Controls when the workflow will run
 on:
@@ -71,9 +71,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_FE_REPO_NAME }}
           IMAGE_TAG: latest
+          BACKEND_ENDPOINT: ${{ vars.BACKEND_ENDPOINT }}
         run: |
           cd starter/frontend
-          docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
+          docker build --build-arg=REACT_APP_MOVIE_API_URL=$BACKEND_ENDPOINT -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG"
