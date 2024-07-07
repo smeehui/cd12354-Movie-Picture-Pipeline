@@ -65,6 +65,7 @@ jobs:
   build-frontend:
     needs: [ 'lint-frontend','test-frontend' ]
     runs-on: ubuntu-latest
+    environment: movie_dev_ops
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
