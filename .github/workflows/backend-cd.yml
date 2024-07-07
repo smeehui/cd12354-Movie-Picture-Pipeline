@@ -101,7 +101,6 @@ jobs:
 
       - name: Configure Kubernetes client
         uses: silverlyra/setup-aws-eks@v0.1
-        working-directory: "starter/backend/k8s"
         with:
           cluster: ${{ vars.EKS_CLUSTER }}
 
