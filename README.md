@@ -466,6 +466,18 @@ kustomize edit set image backend=<ECR_REPO_URL>:<NEW_TAG_HERE>
 kustomize build | kubectl apply -f -
 ```
 
+### Deployed endpoints:
+## Front-end:
+```bash
+http://ae92f88238e514234b3215d87c2aa614-1806330217.us-east-1.elb.amazonaws.com/
+```
+## Back-end:
+```bash
+curl http://a8547a926195d4be3a402dac254cb396-1049931382.us-east-1.elb.amazonaws.com/movies
+# response sample: {"movies":[{"id":"123","title":"Top Gun: Maverick"},{"id":"456","title":"Sonic the Hedgehog"},{"id":"789","title":"A Quiet Place"}]}
+```
+
+
 ## License
 
 [License](LICENSE.md)
