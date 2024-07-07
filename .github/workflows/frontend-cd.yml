@@ -111,6 +111,6 @@ jobs:
           IMAGE_TAG: latest
         run: |
           kustomize edit set image frontend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          kubectl apply -f .
+          kustomize build | kubectl apply -f -
           kubectl rollout restart deployment/frontend
           echo "Completed deployment"
