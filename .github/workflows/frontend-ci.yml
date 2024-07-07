@@ -1,12 +1,9 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI-FRONTEND
+name: Frontend Continuous Integration
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -15,7 +12,11 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  lint-and-test-frontend:
+  lint-frontend:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-frontend
+      cancel-in-progress: true
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -34,48 +35,48 @@ jobs:
 
       - name: Install deps
         if: steps.cache-node.outputs.cache-hit != 'true'
-#        run: echo "skipped"
+        #        run: echo "skipped"
         run: cd starter/frontend && npm i --force
 
       - name: Front-end lint
         run: cd starter/frontend && npm run lint
 
+  test-frontend:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-frontend
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.14.2
+
+      - name: Install deps
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: cd starter/frontend && npm i --force
+
       - name: Front-end test
         run: cd starter/frontend && npm run test
-
-  fe-ci:
-    needs: lint-and-test-frontend
+  build-frontend:
+    needs: [ 'lint-frontend','test-frontend' ]
     runs-on: ubuntu-latest
-    environment: movie_dev_ops
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          aws-region: ${{ vars.AWS_REGION }}
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+          node-version: 18.14.2
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          registries: ${{ vars.AWS_ACCOUNT_ID }}
-          mask-password: "true" # see: https://github.com/aws-actions/amazon-ecr-login#docker-credentials
+      - name: Install deps
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: cd starter/frontend && npm i --force
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-publish
-        shell: bash
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_FE_REPO_NAME }}
-          IMAGE_TAG: latest
-          BACKEND_ENDPOINT: ${{ vars.BACKEND_ENDPOINT }}
-        run: |
-          cd starter/frontend
-          docker build --build-arg=REACT_APP_MOVIE_API_URL=$BACKEND_ENDPOINT -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
-          echo "image_tag=$IMAGE_TAG"
-          echo "full_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - name: Front-end test
+        run: cd starter/frontend && npm run test
