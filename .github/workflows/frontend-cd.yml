@@ -4,14 +4,13 @@ name: Frontend Continuous Deployment
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-#  push:
-#    branches: [ "main" ]
   workflow_run:
     workflows: [ "Frontend Continuous Integration" ]
     branches: [ main ]
     types:
       - completed
+  push:
+    branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -19,7 +18,6 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   fe-cd:
-    needs: build-frontend
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: movie_dev_ops
