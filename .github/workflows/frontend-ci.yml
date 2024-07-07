@@ -14,7 +14,7 @@ on:
 jobs:
   lint-frontend:
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-frontend
+      group: ${{ github.workflow }}-${{ github.ref }}-frontend-lint
       cancel-in-progress: true
 
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
   test-frontend:
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-frontend
+      group: ${{ github.workflow }}-${{ github.ref }}-frontend-test
       cancel-in-progress: true
 
     steps:
