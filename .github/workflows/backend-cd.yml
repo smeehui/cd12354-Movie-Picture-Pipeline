@@ -7,6 +7,11 @@ on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
+  workflow_run:
+    workflows: [ "Backend Continuous Integration" ]
+    branches: [ main ]
+    types:
+      - completed
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -15,6 +20,7 @@ on:
 jobs:
   be-cd:
     needs: backend-build
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: movie_dev_ops
     steps:
