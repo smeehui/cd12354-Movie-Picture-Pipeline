@@ -2,11 +2,6 @@ name: Frontend Continuous Deployment
 
 # Controls when the workflow will run
 on:
-  workflow_run:
-    workflows: [ "Frontend Continuous Integration" ]
-    branches: [ main ]
-    types:
-      - completed
   push:
     branches: [ "main" ]
 
@@ -15,8 +10,59 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  fe-cd:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  lint-frontend:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-frontend-lint
+      cancel-in-progress: true
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.14.2
+
+      - id: cache-node
+        uses: actions/cache@v1
+        with:
+          path: ~/.local/share/node_modules
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install deps
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        #        run: echo "skipped"
+        run: cd starter/frontend && npm i --force
+
+      - name: Front-end lint
+        run: cd starter/frontend && npm run lint
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-frontend-test
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.14.2
+
+      - name: Install deps
+        if: steps.cache-node.outputs.cache-hit != 'true'
+        run: cd starter/frontend && npm i --force
+
+      - name: Front-end test
+        run: cd starter/frontend && npm run test
+
+  frontend-deploy:
+    needs: [ 'lint-frontend','test-frontend' ]
     runs-on: ubuntu-latest
     environment: movie_dev_ops
     steps:

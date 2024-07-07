@@ -2,11 +2,6 @@ name: Backend Continuous Deployment
 
 # Controls when the workflow will run
 on:
-  workflow_run:
-    workflows: [ "Backend Continuous Integration" ]
-    branches: [ main ]
-    types:
-      - completed
   push:
     branches: [ "main" ]
 
@@ -15,8 +10,61 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  be-cd:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  lint-backend:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-backend-lint
+      cancel-in-progress: true
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pipenv wheel pytest flake8
+
+      - id: cache-pipenv
+        uses: actions/cache@v1
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        run: |
+          cd starter/backend
+          pipenv install
+
+      - name: Back-end lint
+        run: cd starter/backend && pipenv run lint
+
+  test-backend:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-backend-test
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pipenv wheel pytest flake8
+
+      - name: Install dependencies
+        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        run: |
+          cd starter/backend
+          pipenv install
+
+      - name: Back-end test
+        run: cd starter/backend && pipenv run test
+
+  be-deploy:
+    needs:  ['lint-backend','test-backend']
     runs-on: ubuntu-latest
     environment: movie_dev_ops
     steps:
