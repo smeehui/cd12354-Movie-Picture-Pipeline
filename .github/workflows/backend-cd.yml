@@ -99,6 +99,12 @@ jobs:
           echo "image_tag=$IMAGE_TAG"
           echo "full_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
+      - name: Configure Kubernetes client
+        uses: silverlyra/setup-aws-eks@v0.1
+        working-directory: "starter/backend/k8s"
+        with:
+          cluster: ${{ vars.EKS_CLUSTER }}
+
       - name: Update Deployment Image Tag
         working-directory: "starter/backend/k8s"
         env:
@@ -108,11 +114,8 @@ jobs:
         run: |
           kustomize edit set image backend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Configure Kubernetes client
-        uses: silverlyra/setup-aws-eks@v0.1
-        working-directory: "starter/backend/k8s"
-        with:
-          cluster: ${{ vars.EKS_CLUSTER }}
+      - name: Deploy to K8S
+        working-directory: "starter/frontend/k8s"
         run: |
           kubectl apply -f .
           kubectl rollout restart deployment/backend
