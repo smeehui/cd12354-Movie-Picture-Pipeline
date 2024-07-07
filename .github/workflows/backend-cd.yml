@@ -112,9 +112,6 @@ jobs:
           IMAGE_TAG: latest
         run: |
           kustomize edit set image backend=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      - name: Deploy to K8S
-        working-directory: "starter/frontend/k8s"
-        run: |
           kubectl apply -f .
           kubectl rollout restart deployment/backend
+          echo "Completed deployment"
